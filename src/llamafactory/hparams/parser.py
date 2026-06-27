@@ -453,6 +453,14 @@ def get_train_args(args: dict[str, Any] | list[str] | None = None) -> _TRAIN_CLS
     if (not training_args.do_train) and finetuning_args.stage == "dpo" and finetuning_args.ref_model is None:
         logger.warning_rank0("Specify `ref_model` for computing rewards at evaluation.")
 
+    if finetuning_args.stage == "sfl":
+        if not finetuning_args.sfl_score_tokens.strip():
+            raise ValueError("`sfl_score_tokens` is required for sfl training (e.g. '0,1' or '1,2,3,4,5').")
+        if data_args.packing:
+            raise ValueError("SfL training does not support packing.")
+        if finetuning_args.finetuning_type not in ["full", "freeze", "lora"]:
+            raise ValueError("SfL training only supports full, freeze, or lora fine-tuning methods.")
+
     # Post-process training arguments
     training_args.generation_max_length = training_args.generation_max_length or data_args.cutoff_len
     training_args.generation_num_beams = data_args.eval_num_beams or training_args.generation_num_beams

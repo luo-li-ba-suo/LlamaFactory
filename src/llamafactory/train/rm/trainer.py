@@ -17,8 +17,9 @@
 
 import json
 import os
+from collections import defaultdict
 from types import MethodType
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import torch
 from transformers import Trainer
@@ -53,6 +54,7 @@ class PairwiseTrainer(Trainer):
         self.model_accepts_loss_kwargs = False  # overwrite trainer's default behavior
         self.finetuning_args = finetuning_args
         self.can_return_loss = True  # override property to return eval_loss
+        self._stored_metrics = defaultdict(lambda: defaultdict(list))
         self.add_callback(FixValueHeadModelCallback)
 
         if processor is not None:
@@ -88,13 +90,8 @@ class PairwiseTrainer(Trainer):
     def compute_loss(
         self, model: "PreTrainedModel", inputs: dict[str, "torch.Tensor"], return_outputs: bool = False, **kwargs
     ) -> Union["torch.Tensor", tuple["torch.Tensor", list["torch.Tensor"]]]:
-        r"""Compute pairwise loss. The first n examples are chosen and the last n examples are rejected.
-
-        Subclass and override to inject custom behavior.
-
-        Note that the first element will be removed from the output tuple.
-        See: https://github.com/huggingface/transformers/blob/v4.40.0/src/transformers/trainer.py#L3842
-        """
+        r"""Compute pairwise loss. The first n examples are chosen and the last n examples are rejected."""
+        _ = inputs.pop("labels", None)  # discard — we only need hidden states for value head
         _, _, values = model(**inputs, output_hidden_states=True, return_dict=True, use_cache=False)
         batch_size = inputs["input_ids"].size(0) // 2
         chosen_masks, rejected_masks = torch.split(inputs["attention_mask"], batch_size, dim=0)
@@ -104,10 +101,42 @@ class PairwiseTrainer(Trainer):
         chosen_scores, rejected_scores = chosen_scores.squeeze(), rejected_scores.squeeze()
 
         loss = -torch.nn.functional.logsigmoid(chosen_scores.float() - rejected_scores.float()).mean()
+
+        # Store batch-level metrics for logging
+        train_eval = "eval" if not self.model.training else "train"
+        score_diff = chosen_scores - rejected_scores
+        self._stored_metrics[train_eval]["chosen_score"].append(chosen_scores.mean().item())
+        self._stored_metrics[train_eval]["rejected_score"].append(rejected_scores.mean().item())
+        self._stored_metrics[train_eval]["score_diff"].append(score_diff.mean().item())
+        self._stored_metrics[train_eval]["accuracy"].append((score_diff > 0).float().mean().item())
+
         if return_outputs:
             return loss, (loss, chosen_scores, rejected_scores)
         else:
             return loss
+
+    @override
+    def log(self, logs: dict[str, float], *args, **kwargs) -> None:
+        r"""Log training/eval metrics including stored batch-level scores."""
+        train_eval = "train" if "loss" in logs else "eval"
+        key_list, metric_list = [], []
+        for key, metrics in self._stored_metrics[train_eval].items():
+            key_list.append(key)
+            metric_list.append(torch.tensor(metrics, dtype=torch.float).to(self.accelerator.device).mean().item())
+
+        del self._stored_metrics[train_eval]
+        if len(metric_list) < 10:
+            for i in range(10 - len(metric_list)):
+                key_list.append(f"dummy_{i}")
+                metric_list.append(0.0)
+
+        metric_list_t = torch.tensor(metric_list, dtype=torch.float).to(self.accelerator.device)
+        metric_list_t = self.accelerator.reduce(metric_list_t, "mean").tolist()
+        for key, metric in zip(key_list, metric_list_t):
+            if not key.startswith("dummy_"):
+                logs[key] = metric
+
+        return Trainer.log(self, logs, *args, **kwargs)
 
     @override
     def _save(self, output_dir: Optional[str] = None, state_dict=None):

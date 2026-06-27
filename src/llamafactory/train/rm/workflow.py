@@ -18,6 +18,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from ...data import PairwiseDataCollatorWithPadding, get_dataset, get_template_and_fix_tokenizer
+from ...extras.logging import get_logger
 from ...extras.ploting import plot_loss
 from ...model import load_model, load_tokenizer
 from ..callbacks import fix_valuehead_checkpoint
@@ -30,6 +31,9 @@ if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
 
     from ...hparams import DataArguments, FinetuningArguments, ModelArguments
+
+
+logger = get_logger(__name__)
 
 
 def run_rm(
@@ -62,6 +66,13 @@ def run_rm(
 
     # Training
     if training_args.do_train:
+        # Pre-training evaluation (baseline accuracy)
+        if training_args.do_eval and dataset_module.get("eval_dataset") is not None:
+            logger.info_rank0("***** Pre-training eval *****")
+            metrics = trainer.evaluate(metric_key_prefix="eval")
+            trainer.log_metrics("eval", metrics)
+            trainer.save_metrics("eval", metrics)
+
         train_result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
         trainer.save_model()
         if training_args.should_save:

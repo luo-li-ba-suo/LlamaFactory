@@ -457,7 +457,7 @@ class FinetuningArguments(
         default=False,
         metadata={"help": "Whether or not to train model in purely bf16 precision (without AMP)."},
     )
-    stage: Literal["pt", "sft", "rm", "ppo", "dpo", "kto"] = field(
+    stage: Literal["pt", "sft", "rm", "ppo", "dpo", "kto", "sfl"] = field(
         default="sft",
         metadata={"help": "Which stage will be performed in training."},
     )
@@ -527,6 +527,18 @@ class FinetuningArguments(
     eaft_alpha: float = field(
         default=1.0,
         metadata={"help": "The alpha parameter for EAFT loss to control the power of adaptive weight."},
+    )
+    sfl_score_tokens: str = field(
+        default="",
+        metadata={"help": "Comma-separated score value strings, e.g. '0,1' (binary) or '1,2,3,4,5' (multiclass)."},
+    )
+    sfl_prefix_str: str = field(
+        default='{"score": ',
+        metadata={"help": "The prefix string before the score value in model output (for logging only)."},
+    )
+    sfl_temperature: float = field(
+        default=5.0,
+        metadata={"help": "Temperature for multi-class SfL softmax."},
     )
     freeze_vision_tower: bool = field(
         default=True,
