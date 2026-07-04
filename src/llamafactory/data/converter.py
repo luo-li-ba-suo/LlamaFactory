@@ -370,10 +370,56 @@ class OpenAIDatasetConverter(DatasetConverter):
         return output
 
 
+@dataclass
+class SfLDatasetConverter(DatasetConverter):
+    r"""Converter for SfL (Score-from-Logits) data.
+
+    ``chosen`` and ``rejected`` are multi-turn message lists in sharegpt
+    format (same ``role_tag``/``content_tag`` convention as ``messages``).
+    Each is parsed into a list of standardized role/content dicts. Both
+    conversations end with a user turn — SfL appends the score prefix
+    after the assistant generation prompt.
+
+    If ``chosen``/``rejected`` is a plain string, it is wrapped as a single
+    user turn for backward compatibility.
+    """
+
+    def __call__(self, example: dict[str, Any]) -> dict[str, Any]:
+        tag_mapping = {
+            self.dataset_attr.user_tag: Role.USER.value,
+            self.dataset_attr.assistant_tag: Role.ASSISTANT.value,
+            self.dataset_attr.observation_tag: Role.OBSERVATION.value,
+            self.dataset_attr.function_tag: Role.FUNCTION.value,
+            self.dataset_attr.system_tag: Role.SYSTEM.value,
+        }
+
+        def parse_messages(raw: Any) -> list[dict[str, str]]:
+            r"""Parse raw messages into standardized role/content dicts."""
+            if isinstance(raw, str):
+                return [{"role": Role.USER.value, "content": raw}]
+            messages = []
+            for msg in raw:
+                role = tag_mapping.get(msg[self.dataset_attr.role_tag], msg[self.dataset_attr.role_tag])
+                messages.append({"role": role, "content": msg[self.dataset_attr.content_tag]})
+            return messages
+
+        return {
+            "_chosen_messages": parse_messages(example[self.dataset_attr.chosen]),
+            "_rejected_messages": parse_messages(example[self.dataset_attr.rejected]),
+            "_system": "",
+            "_tools": "",
+            "_images": None,
+            "_videos": None,
+            "_audios": None,
+            "_tags": example.get("tags", []),
+        }
+
+
 DATASET_CONVERTERS = {
     "alpaca": AlpacaDatasetConverter,
     "sharegpt": SharegptDatasetConverter,
     "openai": OpenAIDatasetConverter,
+    "sfl": SfLDatasetConverter,
 }
 
 

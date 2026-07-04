@@ -139,6 +139,10 @@ class DataArguments:
             )
         },
     )
+    sfl_prefix_str: str = field(
+        default='{"score": ',
+        metadata={"help": "The prefix string before the score value for SfL training."},
+    )
     data_shared_file_system: bool = field(
         default=False,
         metadata={"help": "Whether or not to use a shared file system for the datasets."},

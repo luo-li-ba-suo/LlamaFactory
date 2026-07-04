@@ -532,10 +532,6 @@ class FinetuningArguments(
         default="",
         metadata={"help": "Comma-separated score value strings, e.g. '0,1' (binary) or '1,2,3,4,5' (multiclass)."},
     )
-    sfl_prefix_str: str = field(
-        default='{"score": ',
-        metadata={"help": "The prefix string before the score value in model output (for logging only)."},
-    )
     sfl_temperature: float = field(
         default=5.0,
         metadata={"help": "Temperature for multi-class SfL softmax."},
