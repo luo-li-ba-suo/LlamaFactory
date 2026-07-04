@@ -976,3 +976,79 @@ def sort_placement_group_by_node_ip(placement_group: "PlacementGroup", master_ad
             sorted_bundle_indices = preferred_indices + remaining
 
     return sorted_bundle_indices
+
+
+def compute_tag_metrics(
+    chosen_scores: list[float],
+    rejected_scores: list[float],
+    tags_column: list,
+) -> dict[str, float]:
+    r"""Compute per-tag evaluation metrics from per-sample scores and tags.
+
+    Args:
+        chosen_scores: per-sample chosen score (scalar per sample).
+        rejected_scores: per-sample rejected score.
+        tags_column: list of tag-lists matching samples (e.g. [["chat","hard"], ["math","easy"], ...]).
+
+    Returns:
+        Dict keyed by ``eval_{tag}_{metric}``.
+    """
+    import torch
+
+    chosen = torch.tensor(chosen_scores)
+    rejected = torch.tensor(rejected_scores)
+    correct = chosen > rejected
+
+    all_tags: set[str] = set()
+    for tags in tags_column:
+        if tags:
+            all_tags.update(tags)
+    if not all_tags:
+        return {}
+
+    metrics: dict[str, float] = {}
+    for tag in sorted(all_tags):
+        mask = torch.tensor([tag in (t or []) for t in tags_column])
+        n = mask.sum().item()
+        if n < 2:
+            continue
+        metrics[f"eval_accuracy/{tag}"] = correct[mask].float().mean().item()
+        metrics[f"eval_score_diff/{tag}"] = (chosen[mask] - rejected[mask]).mean().item()
+        metrics[f"eval_chosen_score/{tag}"] = chosen[mask].mean().item()
+        metrics[f"eval_rejected_score/{tag}"] = rejected[mask].mean().item()
+    return metrics
+
+
+_PATCHED_REWRITE = False
+
+
+def patch_rewrite_logs():
+    """Monkey-patch ``rewrite_logs`` to keep per-tag metric key grouping intact.
+
+    HF rewrites: ``eval_*`` → ``eval/*``, everything else → ``train/*``.
+    Per-tag keys (``accuracy_eval/normal`` etc.) should pass through unchanged
+    so wandb groups them by metric type instead of dumping everything under ``eval/``.
+    """
+    global _PATCHED_REWRITE
+    if _PATCHED_REWRITE:
+        return
+    _PATCHED_REWRITE = True
+
+    _TAG_PREFIXES = ("eval_accuracy/", "eval_score_diff/", "eval_chosen_score/", "eval_rejected_score/")
+
+    def patched(d):
+        new_d = {}
+        for k, v in d.items():
+            if any(k.startswith(p) for p in _TAG_PREFIXES):
+                new_d[k] = v
+            elif k.startswith("eval_"):
+                new_d["eval/" + k[5:]] = v
+            elif k.startswith("test_"):
+                new_d["test/" + k[6:]] = v
+            else:
+                new_d["train/" + k] = v
+        return new_d
+
+    import transformers.integrations.integration_utils as mod
+
+    mod.rewrite_logs = patched

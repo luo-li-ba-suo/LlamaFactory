@@ -28,7 +28,7 @@ from typing_extensions import override
 from ...extras import logging
 from ...extras.packages import is_transformers_version_greater_than
 from ..callbacks import FixValueHeadModelCallback, SaveProcessorCallback
-from ..trainer_utils import create_custom_optimizer, create_custom_scheduler
+from ..trainer_utils import compute_tag_metrics, create_custom_optimizer, create_custom_scheduler, patch_rewrite_logs
 
 
 if TYPE_CHECKING:
@@ -51,10 +51,12 @@ class PairwiseTrainer(Trainer):
             kwargs["processing_class"] = kwargs.pop("tokenizer")
 
         super().__init__(**kwargs)
+        patch_rewrite_logs()  # prevent HF from mangling per-tag wandb keys
         self.model_accepts_loss_kwargs = False  # overwrite trainer's default behavior
         self.finetuning_args = finetuning_args
         self.can_return_loss = True  # override property to return eval_loss
         self._stored_metrics = defaultdict(lambda: defaultdict(list))
+        self._eval_scores: list[tuple[float, float]] = []
         self.add_callback(FixValueHeadModelCallback)
 
         if processor is not None:
@@ -92,15 +94,22 @@ class PairwiseTrainer(Trainer):
     ) -> Union["torch.Tensor", tuple["torch.Tensor", list["torch.Tensor"]]]:
         r"""Compute pairwise loss. The first n examples are chosen and the last n examples are rejected."""
         _ = inputs.pop("labels", None)  # discard — we only need hidden states for value head
+        tags = inputs.pop("tags", None)  # pop before model forward (model rejects unknown kwargs)
         _, _, values = model(**inputs, output_hidden_states=True, return_dict=True, use_cache=False)
         batch_size = inputs["input_ids"].size(0) // 2
         chosen_masks, rejected_masks = torch.split(inputs["attention_mask"], batch_size, dim=0)
         chosen_rewards, rejected_rewards = torch.split(values, batch_size, dim=0)
         chosen_scores = chosen_rewards.gather(dim=-1, index=(chosen_masks.sum(dim=-1, keepdim=True) - 1))
         rejected_scores = rejected_rewards.gather(dim=-1, index=(rejected_masks.sum(dim=-1, keepdim=True) - 1))
-        chosen_scores, rejected_scores = chosen_scores.squeeze(), rejected_scores.squeeze()
+        chosen_scores, rejected_scores = chosen_scores.squeeze(-1), rejected_scores.squeeze(-1)
 
         loss = -torch.nn.functional.logsigmoid(chosen_scores.float() - rejected_scores.float()).mean()
+
+        # Store per-sample scores AND tags for per-tag eval
+        if not self.model.training:
+            for i in range(len(chosen_scores)):
+                tag_i = tags[i] if tags is not None else []
+                self._eval_scores.append((chosen_scores[i].item(), rejected_scores[i].item(), tag_i))
 
         # Store batch-level metrics for logging
         train_eval = "eval" if not self.model.training else "train"
@@ -137,6 +146,50 @@ class PairwiseTrainer(Trainer):
                 logs[key] = metric
 
         return Trainer.log(self, logs, *args, **kwargs)
+
+    @override
+    def evaluate(
+        self,
+        eval_dataset=None,
+        ignore_keys=None,
+        metric_key_prefix="eval",
+    ) -> dict[str, float]:
+        import torch.distributed as dist
+
+        self._eval_scores = []
+        metrics = super().evaluate(eval_dataset=eval_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix)
+
+        all_scores = self._eval_scores  # list[tuple[float, float, list[str]]]
+        self._eval_scores = []
+
+        if len(all_scores) > 0:
+            if self.accelerator.num_processes > 1:
+                world_size = dist.get_world_size()
+                gathered: list | None = [None] * world_size if dist.get_rank() == 0 else None
+                dist.gather_object(all_scores, gathered, dst=0)
+                if dist.get_rank() == 0 and gathered is not None:
+                    all_gathered: list = []
+                    for g in gathered:
+                        if g is not None:
+                            all_gathered.extend(g)
+                    chosen = [s[0] for s in all_gathered]
+                    rejected = [s[1] for s in all_gathered]
+                    tags_list = [s[2] for s in all_gathered]
+                    tag_metrics = compute_tag_metrics(chosen, rejected, tags_list)
+                    metrics.update(tag_metrics)
+                else:
+                    tag_metrics = {}
+            else:
+                chosen = [s[0] for s in all_scores]
+                rejected = [s[1] for s in all_scores]
+                tags_list = [s[2] for s in all_scores]
+                tag_metrics = compute_tag_metrics(chosen, rejected, tags_list)
+                metrics.update(tag_metrics)
+
+            # Log to wandb — self.log() uses accelerator.reduce() which is a collective op
+            self.log(tag_metrics if self.accelerator.is_main_process else {})
+
+        return metrics
 
     @override
     def _save(self, output_dir: Optional[str] = None, state_dict=None):

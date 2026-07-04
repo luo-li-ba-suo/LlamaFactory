@@ -12,16 +12,17 @@ lora_target: all
 
 ### dataset
 dataset: helpsteer2_bt_train
+eval_dataset: helpsteer2_bt_eval_tagged
 template: qwen
-cutoff_len: 4096
-val_size: 0.05
+cutoff_len: 2048
 preprocessing_num_workers: 16
 
 ### output
-output_dir: saves/helpsteer2/bt-rm
+output_dir: /workspace/model/ckpt/reward_model/bt-lora
 run_name: helpsteer2_bt_rm_lora_r16
 logging_steps: 10
 save_steps: 200
+save_strategy: steps
 plot_loss: true
 overwrite_output_dir: true
 report_to: wandb
@@ -39,6 +40,6 @@ resume_from_checkpoint: null
 
 ### eval
 do_eval: true
-per_device_eval_batch_size: 2
+per_device_eval_batch_size: 1
 eval_strategy: steps
-eval_steps: 50
+eval_steps: 10

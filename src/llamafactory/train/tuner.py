@@ -23,7 +23,7 @@ from transformers import EarlyStoppingCallback, PreTrainedModel
 from ..data import get_template_and_fix_tokenizer
 from ..extras import logging
 from ..extras.constants import V_HEAD_SAFE_WEIGHTS_NAME, V_HEAD_WEIGHTS_NAME
-from ..extras.misc import find_available_port, get_device_name, get_torch_device, infer_optim_dtype
+from ..extras.misc import find_available_port, get_device_name, get_torch_device, infer_optim_dtype, is_env_enabled
 from ..extras.packages import (
     is_hyper_parallel_available,
     is_mcore_adapter_available,
@@ -136,14 +136,20 @@ def _training_function(config: dict[str, Any]) -> None:
     else:
         raise ValueError(f"Unknown task: {finetuning_args.stage}.")
 
-    if is_ray_available() and ray.is_initialized():
-        return  # if ray is intialized it will destroy the process group on return
+    if is_env_enabled("CLEAN_EXIT"):
+        if is_ray_available() and ray.is_initialized():
+            return
 
-    try:
-        if dist.is_initialized():
-            dist.destroy_process_group()
-    except Exception as e:
-        logger.warning(f"Failed to destroy process group: {e}.")
+        try:
+            if dist.is_initialized():
+                dist.destroy_process_group()
+        except Exception as e:
+            logger.warning(f"Failed to destroy process group: {e}.")
+
+        return
+
+    # Hard exit to avoid hanging on NCCL cleanup / wandb sync
+    os._exit(0)
 
 
 def run_exp(args: Optional[dict[str, Any]] = None, callbacks: Optional[list["TrainerCallback"]] = None) -> None:
