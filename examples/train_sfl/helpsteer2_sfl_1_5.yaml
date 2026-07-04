@@ -3,26 +3,30 @@ model_name_or_path: /workspace/model/chat_model/Qwen2.5-7B-Instruct
 trust_remote_code: true
 
 ### method
-stage: rm
+stage: sfl
 do_train: true
 finetuning_type: lora
 lora_rank: 16
 lora_alpha: 32
 lora_target: all
 
+### sfl
+sfl_score_tokens: "1,2,3,4,5"
+sfl_prefix_str: '{"score": '
+sfl_temperature: 5.0
+
 ### dataset
-dataset: helpsteer2_bt_train
-eval_dataset: helpsteer2_bt_eval_tagged
+dataset: helpsteer2_sfl_1_5_train
+eval_dataset: helpsteer2_sfl_1_5_eval_tagged
 template: qwen
 cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: /workspace/model/ckpt/reward_model/bt-lora
-run_name: helpsteer2_bt_rm_lora_r16
+output_dir: saves/helpsteer2/sfl-lora
+run_name: helpsteer2_sfl_lora_r16
 logging_steps: 10
 save_steps: 200
-save_strategy: steps
 plot_loss: true
 overwrite_output_dir: true
 report_to: wandb
@@ -40,6 +44,6 @@ resume_from_checkpoint: null
 
 ### eval
 do_eval: true
-per_device_eval_batch_size: 1
+per_device_eval_batch_size: 2
 eval_strategy: steps
-eval_steps: 10
+eval_steps: 16
