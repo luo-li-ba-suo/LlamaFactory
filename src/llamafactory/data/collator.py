@@ -561,7 +561,9 @@ class PairwiseDataCollatorWithPadding(MultiModalDataCollatorForSeq2Seq):
                 }
                 concatenated_features.append(target_feature)
 
-        return super().__call__(concatenated_features)
+        batch = super().__call__(concatenated_features)
+        batch["tags"] = [feature.get("tags", []) for feature in features]
+        return batch
 
 
 @dataclass
