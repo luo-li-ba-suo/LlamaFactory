@@ -31,6 +31,36 @@
       "assistant_tag": "gpt"
     }
   },
+  "helpsteer2_sfl_eval_tagged": {
+    "file_name": "/workspace/projects/reward_bench/data/helpsteer2/helpsteer2_sfl_eval_tagged.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_train": {
+    "file_name": "helpsteer2/helpsteer2_sfl_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
   "helpsteer2_bt_val": {
     "file_name": "helpsteer2/helpsteer2_bt_val.json",
     "ranking": true,
