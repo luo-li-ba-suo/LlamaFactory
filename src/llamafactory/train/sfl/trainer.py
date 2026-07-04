@@ -19,11 +19,14 @@ from typing_extensions import override
 
 from ...extras import logging
 from ..dpo.trainer import CustomDPOTrainer
+from ..trainer_utils import compute_tag_metrics, patch_rewrite_logs
 from .sfl_loss import extract_score_logits, sfl_binary_loss, sfl_multiclass_loss
 
 
 if TYPE_CHECKING:
+    from torch.utils.data import Dataset
     from transformers import PreTrainedModel, ProcessorMixin
+
     from ...hparams import FinetuningArguments
 
 
@@ -72,6 +75,9 @@ class CustomSfLTrainer(CustomDPOTrainer):
         if not self.sfl_score_token_ids:
             raise ValueError("`sfl_score_tokens` must contain at least one token string.")
 
+        patch_rewrite_logs()  # prevent HF from mangling per-tag wandb keys
+        self._eval_scores: list[tuple[float, float, list[str]]] = []
+
         logger.info_rank0(f"SfL score token ids: {self.sfl_score_token_ids}")
         logger.info_rank0(f"SfL temperature: {self.sfl_temperature}")
 
@@ -93,6 +99,7 @@ class CustomSfLTrainer(CustomDPOTrainer):
         train_eval: Literal["train", "eval"] = "train",
     ) -> tuple["torch.Tensor", dict[str, "torch.Tensor"]]:
         r"""Compute SfL loss: extract score logits from chosen/rejected, apply pairwise ranking loss."""
+        tags = batch.pop("tags", None)  # pop before model forward (model rejects unknown kwargs)
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
 
@@ -140,7 +147,63 @@ class CustomSfLTrainer(CustomDPOTrainer):
             f"{prefix}accuracy": accuracy.item(),
         }
 
+        # Store per-sample scores AND tags for per-tag eval
+        if not self.model.training:
+            if len(self.sfl_score_token_ids) == 2:
+                cs, rs = chosen_score, rejected_score
+            else:
+                cs, rs = expected_chosen, expected_rejected
+            for i in range(len(cs)):
+                tag_i = tags[i] if tags is not None else []
+                self._eval_scores.append((cs[i].item(), rs[i].item(), tag_i))
+
         return losses.mean(), metrics
+
+    @override
+    def evaluate(
+        self,
+        eval_dataset: Optional["Dataset"] = None,
+        ignore_keys: Optional[list[str]] = None,
+        metric_key_prefix: str = "eval",
+    ) -> dict[str, float]:
+        import torch.distributed as dist
+
+        self._eval_scores = []
+        metrics = super().evaluate(
+            eval_dataset=eval_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix
+        )
+
+        all_scores = self._eval_scores  # list[tuple[float, float, list[str]]]
+        self._eval_scores = []
+
+        if len(all_scores) > 0:
+            if self.accelerator.num_processes > 1:
+                world_size = dist.get_world_size()
+                gathered: list | None = [None] * world_size if dist.get_rank() == 0 else None
+                dist.gather_object(all_scores, gathered, dst=0)
+                if dist.get_rank() == 0 and gathered is not None:
+                    all_gathered: list = []
+                    for g in gathered:
+                        if g is not None:
+                            all_gathered.extend(g)
+                    chosen = [s[0] for s in all_gathered]
+                    rejected = [s[1] for s in all_gathered]
+                    tags_list = [s[2] for s in all_gathered]
+                    tag_metrics = compute_tag_metrics(chosen, rejected, tags_list)
+                    metrics.update(tag_metrics)
+                else:
+                    tag_metrics = {}
+            else:
+                chosen = [s[0] for s in all_scores]
+                rejected = [s[1] for s in all_scores]
+                tags_list = [s[2] for s in all_scores]
+                tag_metrics = compute_tag_metrics(chosen, rejected, tags_list)
+                metrics.update(tag_metrics)
+
+            # Log to wandb — self.log() uses accelerator.reduce() which is a collective op
+            self.log(tag_metrics if self.accelerator.is_main_process else {})
+
+        return metrics
 
     @override
     def compute_reference_log_probs(
