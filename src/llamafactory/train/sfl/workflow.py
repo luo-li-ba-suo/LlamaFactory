@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
-from ...data import get_template_and_fix_tokenizer
+from ...data import get_dataset, get_template_and_fix_tokenizer
 from ...extras.constants import IGNORE_INDEX
 from ...extras.logging import get_logger
 from ...extras.misc import calculate_tps
@@ -32,139 +31,6 @@ if TYPE_CHECKING:
 
 
 logger = get_logger(__name__)
-
-
-def _prepare_sfl_dataset(
-    model_args: "ModelArguments",
-    data_args: "DataArguments",
-    training_args: "Seq2SeqTrainingArguments",
-    finetuning_args: "FinetuningArguments",
-    tokenizer,
-):
-    r"""Load raw pairwise data and tokenize for SfL.
-
-    Each example is expected to have ``chosen`` and ``rejected`` fields
-    containing raw user-message text. The chat template is applied to each
-    with ``add_generation_prompt=True``, then ``{"score":`` prefix tokens
-    are appended for the model to score.
-    """
-    from datasets import Dataset, load_dataset
-
-    # Load raw dataset(s) — supports json, jsonl, parquet, etc.
-    # dataset may be a str like "data/a.json" or a list like ["data/a.json"]
-    raw = data_args.dataset
-    if isinstance(raw, list):
-        dataset_names = raw
-    elif isinstance(raw, str):
-        dataset_names = [s.strip() for s in raw.split(",") if s.strip()]
-    else:
-        dataset_names = []
-    if not dataset_names:
-        raise ValueError("No dataset specified for SfL training.")
-
-    all_datasets = []
-    for name in dataset_names:
-        name = name.strip()
-        # Resolve path: try raw name first, then dataset_dir/name
-        if os.path.isfile(name):
-            path = name
-        elif data_args.dataset_dir and not name.startswith(data_args.dataset_dir):
-            path = os.path.join(data_args.dataset_dir, name)
-        else:
-            path = name  # hope for the best
-
-        # Determine format from file extension and load
-        lower = name.lower()
-        if lower.endswith(".json") or lower.endswith(".jsonl"):
-            ds = load_dataset("json", data_files=path, split="train")
-        elif lower.endswith(".parquet"):
-            ds = load_dataset("parquet", data_files=path, split="train")
-        elif lower.endswith(".csv"):
-            ds = load_dataset("csv", data_files=path, split="train")
-        else:
-            raise ValueError(
-                f"Unsupported dataset format for SfL: '{name}'. "
-                f"Use .json, .jsonl, .parquet, or .csv files."
-            )
-        all_datasets.append(ds)
-
-    from datasets import concatenate_datasets
-
-    dataset = concatenate_datasets(all_datasets) if len(all_datasets) > 1 else all_datasets[0]
-
-    # Shuffle
-    dataset = dataset.shuffle(seed=training_args.seed)
-
-    # Subsample
-    if data_args.max_samples is not None:
-        dataset = dataset.select(range(min(data_args.max_samples, len(dataset))))
-
-    # Train/val split
-    if data_args.val_size > 1e-6:
-        split = dataset.train_test_split(test_size=data_args.val_size, seed=training_args.seed)
-        train_data = split["train"]
-        eval_data = split["test"]
-    else:
-        train_data = dataset
-        eval_data = None
-
-    # Cache processed datasets to disk for fast reload
-    with training_args.main_process_first(desc="tokenize sfl dataset"):
-        # Encode score prefix tokens once
-        prefix_token_ids = tokenizer.encode(
-            finetuning_args.sfl_prefix_str, add_special_tokens=False
-        )
-        if not prefix_token_ids:
-            raise ValueError(f"sfl_prefix_str '{finetuning_args.sfl_prefix_str}' encodes to 0 tokens.")
-
-        def tokenize_sfl_example(example: dict[str, Any]) -> dict[str, Any]:
-            chosen_text = str(example["chosen"])
-            rejected_text = str(example["rejected"])
-
-            # Apply chat template as user turn with add_generation_prompt=True
-            # → <|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\n
-            chosen_enc = tokenizer.apply_chat_template(
-                [{"role": "user", "content": chosen_text}],
-                add_generation_prompt=True,
-                tokenize=True,
-            )
-            rejected_enc = tokenizer.apply_chat_template(
-                [{"role": "user", "content": rejected_text}],
-                add_generation_prompt=True,
-                tokenize=True,
-            )
-            chosen_tokens = chosen_enc if isinstance(chosen_enc, list) else list(chosen_enc["input_ids"])
-            rejected_tokens = rejected_enc if isinstance(rejected_enc, list) else list(rejected_enc["input_ids"])
-
-            # Append {"score": prefix — score digit follows immediately
-            chosen_input_ids = chosen_tokens + prefix_token_ids
-            rejected_input_ids = rejected_tokens + prefix_token_ids
-
-            # Truncate if needed
-            max_len = data_args.cutoff_len
-            chosen_input_ids = chosen_input_ids[:max_len]
-            rejected_input_ids = rejected_input_ids[:max_len]
-
-            # All labels IGNORE — SfL computes loss on score position only
-            chosen_labels = [IGNORE_INDEX] * len(chosen_input_ids)
-            rejected_labels = [IGNORE_INDEX] * len(rejected_input_ids)
-
-            return {
-                "chosen_input_ids": chosen_input_ids,
-                "chosen_attention_mask": [1] * len(chosen_input_ids),
-                "chosen_labels": chosen_labels,
-                "rejected_input_ids": rejected_input_ids,
-                "rejected_attention_mask": [1] * len(rejected_input_ids),
-                "rejected_labels": rejected_labels,
-                "images": [],
-                "videos": [],
-                "audios": [],
-            }
-
-        train_dataset = train_data.map(tokenize_sfl_example, remove_columns=train_data.column_names)
-        eval_dataset = eval_data.map(tokenize_sfl_example, remove_columns=eval_data.column_names) if eval_data else None
-
-    return {"train_dataset": train_dataset, "eval_dataset": eval_dataset}
 
 
 def run_sfl(
@@ -186,14 +52,8 @@ def run_sfl(
     template = get_template_and_fix_tokenizer(tokenizer, data_args)
     model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
 
-    # SfL-specific data pipeline: raw chosen/rejected text → tokenized pairs
-    dataset_module = _prepare_sfl_dataset(
-        model_args=model_args,
-        data_args=data_args,
-        training_args=training_args,
-        finetuning_args=finetuning_args,
-        tokenizer=tokenizer,
-    )
+    # SfL data pipeline: converter → processor → collator
+    dataset_module = get_dataset(template, model_args, data_args, training_args, stage="sfl", **tokenizer_module)
 
     from ...data import PairwiseDataCollatorWithPadding
 
