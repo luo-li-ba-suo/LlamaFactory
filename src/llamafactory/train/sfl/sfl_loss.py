@@ -83,9 +83,9 @@ def sfl_multiclass_loss(
     r"""Multi-class SfL loss for 1-5 (or any ordered) scoring.
 
     Computes softmax over score tokens for chosen and rejected separately,
-    then penalizes configurations where rejected gets a higher score than chosen.
+    then minimizes the negative log-likelihood that chosen scores higher than rejected.
 
-        loss = sum_{i} sum_{j>i} p_chosen[:, j] * p_rejected[:, i]
+        loss = -log(sum_{i} sum_{j>i} p_chosen[:, j] * p_rejected[:, i])
 
     Args:
         chosen_scores: [B, K] logits for score tokens in chosen response.
@@ -99,9 +99,12 @@ def sfl_multiclass_loss(
     p_rejected = F.softmax(rejected_scores / temperature, dim=-1)  # [B, K]
 
     K = p_chosen.size(-1)
-    loss = torch.zeros(p_chosen.size(0), device=p_chosen.device)
+    # P(chosen > rejected) = sum_{i} sum_{j>i} p_chosen[:, j] * p_rejected[:, i]
+    prob = torch.zeros(p_chosen.size(0), device=p_chosen.device)
     for i in range(K):
         for j in range(i + 1, K):
-            loss = loss + p_chosen[:, j] * p_rejected[:, i]
+            prob = prob + p_chosen[:, j] * p_rejected[:, i]
 
+    # Negative log-likelihood: -log(P(chosen > rejected))
+    loss = -torch.log(prob + 1e-8)
     return loss
