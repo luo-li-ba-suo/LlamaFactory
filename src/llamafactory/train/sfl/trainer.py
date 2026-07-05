@@ -135,9 +135,7 @@ class CustomSfLTrainer(CustomDPOTrainer):
             expected_chosen = (p_chosen * weights).sum(dim=-1)
             expected_rejected = (p_rejected * weights).sum(dim=-1)
             score_diff = expected_chosen - expected_rejected
-            chosen_preds = chosen_scores.argmax(dim=-1)
-            rejected_preds = rejected_scores.argmax(dim=-1)
-            accuracy = (chosen_preds > rejected_preds).float().mean()
+            accuracy = (expected_chosen > expected_rejected).float().mean()
 
         prefix = "eval_" if train_eval == "eval" else ""
         metrics: dict[str, float] = {
