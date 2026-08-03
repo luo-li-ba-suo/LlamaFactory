@@ -84,10 +84,38 @@ class CustomSfLTrainer(CustomDPOTrainer):
     def _sfl_forward(
         self, model: "PreTrainedModel", batch: dict[str, "torch.Tensor"]
     ) -> tuple["torch.Tensor", "torch.Tensor"]:
-        r"""Lightweight forward: only returns raw logits, no log_softmax over full vocab."""
+        r"""Return score-token logits for chosen and rejected responses.
+
+        Qwen2 and Qwen3 expose their decoder backbone and language-model head separately.
+        SfL only needs the score-token logits following the final non-padding
+        token, so avoid materializing the otherwise enormous ``[B, L, V]``
+        logits tensor for Qwen models. The regular model path is retained for other
+        architectures.
+        """
         _ = batch.pop("labels")
-        all_logits: torch.Tensor = model(**batch, return_dict=True, use_cache=False).logits.to(torch.float32)
         batch_size = batch["input_ids"].size(0) // 2
+
+        if getattr(model.config, "model_type", None) in {"qwen2", "qwen3"}:
+            base_model = model.get_base_model() if hasattr(model, "get_base_model") else model
+            backbone = getattr(base_model, "model", None)
+            lm_head = getattr(base_model, "lm_head", None)
+            if backbone is not None and lm_head is not None:
+                outputs = backbone(**batch, return_dict=True, use_cache=False)
+                last_hidden_state = outputs.last_hidden_state
+                last_valid_pos = batch["attention_mask"].sum(-1) - 1
+                if (last_valid_pos < 0).any():
+                    raise RuntimeError("No valid tokens found (all pad). Check cutoff_len or data.")
+
+                batch_indices = torch.arange(last_hidden_state.size(0), device=last_hidden_state.device)
+                last_hidden_state = last_hidden_state[batch_indices, last_valid_pos]
+                score_token_ids = torch.tensor(
+                    self.sfl_score_token_ids, device=last_hidden_state.device, dtype=torch.long
+                )
+                score_logits = lm_head(last_hidden_state)[:, score_token_ids]
+                chosen_logits, rejected_logits = score_logits.split(batch_size, dim=0)
+                return chosen_logits, rejected_logits
+
+        all_logits: torch.Tensor = model(**batch, return_dict=True, use_cache=False).logits.to(torch.float32)
         chosen_logits, rejected_logits = all_logits.split(batch_size, dim=0)
         return chosen_logits, rejected_logits
 
@@ -105,18 +133,21 @@ class CustomSfLTrainer(CustomDPOTrainer):
 
         chosen_logits, rejected_logits = self._sfl_forward(model, batch)
 
-        B = input_ids.size(0) // 2
-        chosen_input_ids = input_ids[:B]
-        rejected_input_ids = input_ids[B:]
-        chosen_attention_mask = attention_mask[:B]
-        rejected_attention_mask = attention_mask[B:]
+        if chosen_logits.size(-1) == len(self.sfl_score_token_ids):
+            chosen_scores, rejected_scores = chosen_logits, rejected_logits
+        else:
+            B = input_ids.size(0) // 2
+            chosen_input_ids = input_ids[:B]
+            rejected_input_ids = input_ids[B:]
+            chosen_attention_mask = attention_mask[:B]
+            rejected_attention_mask = attention_mask[B:]
 
-        chosen_scores = extract_score_logits(
-            chosen_logits, chosen_input_ids, chosen_attention_mask, self.sfl_score_token_ids
-        )
-        rejected_scores = extract_score_logits(
-            rejected_logits, rejected_input_ids, rejected_attention_mask, self.sfl_score_token_ids
-        )
+            chosen_scores = extract_score_logits(
+                chosen_logits, chosen_input_ids, chosen_attention_mask, self.sfl_score_token_ids
+            )
+            rejected_scores = extract_score_logits(
+                rejected_logits, rejected_input_ids, rejected_attention_mask, self.sfl_score_token_ids
+            )
 
         if len(self.sfl_score_token_ids) == 2:
             losses = sfl_binary_loss(chosen_scores, rejected_scores)
