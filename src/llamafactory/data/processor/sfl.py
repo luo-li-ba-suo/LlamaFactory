@@ -47,10 +47,19 @@ class SfLDatasetProcessor(DatasetProcessor):
 
     def _encode_sfl_example(self, messages: list[dict[str, str]], cutoff_len: int):
         r"""Apply chat template to a full conversation and append score prefix."""
-        encoded = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=True)
+        encoded = self.tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            enable_thinking=self.template.enable_thinking,
+        )
         tokens = list(encoded) if isinstance(encoded, list) else list(encoded["input_ids"])
         input_ids = tokens + self.prefix_token_ids
-        input_ids = input_ids[:cutoff_len]
+        if len(input_ids) > cutoff_len:
+            raise ValueError(
+                f"SfL example length ({len(input_ids)}) exceeds cutoff_len ({cutoff_len}) after appending "
+                "`sfl_prefix_str`. Shorten the source conversation or increase `cutoff_len`."
+            )
         labels = [IGNORE_INDEX] * len(input_ids)
         return input_ids, labels
 
