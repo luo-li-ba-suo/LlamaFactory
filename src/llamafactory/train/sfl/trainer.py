@@ -95,8 +95,13 @@ class CustomSfLTrainer(CustomDPOTrainer):
         _ = batch.pop("labels")
         batch_size = batch["input_ids"].size(0) // 2
 
-        if getattr(model.config, "model_type", None) in {"qwen2", "qwen3"}:
-            base_model = model.get_base_model() if hasattr(model, "get_base_model") else model
+        # During multi-GPU training, ``model`` is wrapped by DDP. Inspect and
+        # access the underlying PEFT model for the Qwen-specific fast path.
+        model_to_unwrap = model.module if hasattr(model, "module") else model
+        if getattr(model_to_unwrap.config, "model_type", None) in {"qwen2", "qwen3"}:
+            base_model = (
+                model_to_unwrap.get_base_model() if hasattr(model_to_unwrap, "get_base_model") else model_to_unwrap
+            )
             backbone = getattr(base_model, "model", None)
             lm_head = getattr(base_model, "lm_head", None)
             if backbone is not None and lm_head is not None:
