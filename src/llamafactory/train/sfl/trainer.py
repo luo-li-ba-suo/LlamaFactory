@@ -115,7 +115,7 @@ class CustomSfLTrainer(CustomDPOTrainer):
                 chosen_logits, rejected_logits = score_logits.split(batch_size, dim=0)
                 return chosen_logits, rejected_logits
 
-        all_logits: torch.Tensor = model(**batch, return_dict=True, use_cache=False).logits  # keep bf16 — extract_score_logits only needs few tokens
+        all_logits: torch.Tensor = model(**batch, return_dict=True, use_cache=False).logits.to(torch.float32)
         chosen_logits, rejected_logits = all_logits.split(batch_size, dim=0)
         return chosen_logits, rejected_logits
 
