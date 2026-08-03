@@ -41,6 +41,63 @@ if TYPE_CHECKING:
 logger = logging.get_logger(__name__)
 
 
+def _is_qwen_model(model: "PreTrainedModel") -> bool:
+    r"""Return whether a value-head wrapper is backed by a Qwen model."""
+    config = model.config
+    model_name = str(getattr(config, "_name_or_path", "")).lower()
+    model_type = str(getattr(config, "model_type", "")).lower()
+    return "qwen" in model_name or model_type.startswith("qwen")
+
+
+def _patch_valuehead_forward(model: "PreTrainedModel") -> None:
+    r"""Patch ``AutoModelForCausalLMWithValueHead.forward`` to skip ``lm_logits.float()``.
+
+    TRL's value head model converts the full-vocabulary logits tensor to float32
+    inside its forward pass, which wastes ~5 GiB of GPU memory for reward model
+    training (the trainer never reads ``lm_logits``).  This monkey-patch keeps
+    logits in the model's native dtype (bf16) without changing any other logic.
+    """
+    def patched_forward(
+        self,
+        input_ids=None,
+        past_key_values=None,
+        attention_mask=None,
+        return_past_key_values=False,
+        **kwargs,
+    ):
+        kwargs["output_hidden_states"] = True
+        kwargs["past_key_values"] = past_key_values
+
+        if self.is_peft_model and self.pretrained_model.active_peft_config.peft_type == "PREFIX_TUNING":
+            kwargs.pop("past_key_values")
+
+        base_model_output = self.pretrained_model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            **kwargs,
+        )
+
+        last_hidden_state = base_model_output.hidden_states[-1]
+        loss = base_model_output.loss
+
+        if last_hidden_state.device != self.v_head.summary.weight.device:
+            last_hidden_state = last_hidden_state.to(self.v_head.summary.weight.device)
+
+        value = self.v_head(last_hidden_state).squeeze(-1)
+
+        # RM training never reads lm_logits — return a dummy to prevent
+        # accelerate's convert_to_fp32 from materializing the full vocab tensor.
+        del base_model_output  # free bf16 logits early
+        dummy = torch.empty(0, device=value.device)
+
+        if return_past_key_values:
+            return (dummy, loss, value, None)
+        else:
+            return (dummy, loss, value)
+
+    model.forward = MethodType(patched_forward, model)
+
+
 class PairwiseTrainer(Trainer):
     r"""Inherits Trainer to compute pairwise loss."""
 
@@ -67,6 +124,9 @@ class PairwiseTrainer(Trainer):
 
             self.accelerator.clip_grad_norm_ = MethodType(clip_grad_norm_old_version, self.accelerator)
             self.add_callback(BAdamCallback)
+
+        if _is_qwen_model(self.model):
+            _patch_valuehead_forward(model=self.model)
 
     @override
     def create_optimizer(self, *args, **kwargs) -> "torch.optim.Optimizer":
@@ -141,9 +201,12 @@ class PairwiseTrainer(Trainer):
 
         metric_list_t = torch.tensor(metric_list, dtype=torch.float).to(self.accelerator.device)
         metric_list_t = self.accelerator.reduce(metric_list_t, "mean").tolist()
+        metric_prefix = "eval_" if train_eval == "eval" else ""
         for key, metric in zip(key_list, metric_list_t):
             if not key.startswith("dummy_"):
-                logs[key] = metric
+                # Keep the global eval_accuracy computed by ComputeAccuracy instead of
+                # replacing it with this mean of per-batch accuracies.
+                logs.setdefault(f"{metric_prefix}{key}", metric)
 
         return Trainer.log(self, logs, *args, **kwargs)
 
