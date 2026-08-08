@@ -1,0 +1,14 @@
+### B3 curriculum SfL LoRA merge (CPU only)
+### Keep this on CPU so all training GPUs remain available.
+
+### model
+model_name_or_path: ../../model/Qwen3-8B
+adapter_name_or_path: saves/curriculum/qwen3-8b-sfl-margin-b3
+template: qwen3
+trust_remote_code: true
+
+### export
+export_dir: saves/curriculum/qwen3-8b-sfl-margin-b3-merged
+export_size: 5
+export_device: cpu
+export_legacy_format: false
