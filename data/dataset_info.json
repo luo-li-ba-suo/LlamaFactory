@@ -1,6 +1,6 @@
 {
-  "helpsteer2_bt_train": {
-    "file_name": "helpsteer2/assembled/helpsteer2/bt_train.json",
+  "helpsteer3_english_bt_train": {
+    "file_name": "helpsteer3/assembled/English/bt_train.json",
     "ranking": true,
     "formatting": "sharegpt",
     "columns": {
@@ -15,8 +15,301 @@
       "assistant_tag": "gpt"
     }
   },
-  "helpsteer2_bt_val": {
-    "file_name": "helpsteer2/assembled/helpsteer2/bt_val.json",
+  "helpsteer3_english_bt_val": {
+    "file_name": "helpsteer3/assembled/English/bt_val.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_english_sfl_1_5_train": {
+    "file_name": "helpsteer3/assembled/English/sfl_1_5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_english_sfl_1_5_val": {
+    "file_name": "helpsteer3/assembled/English/sfl_1_5_val.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_bt_eval_english": {
+    "file_name": "helpsteer3/final/bt_eval_english.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_bt_eval_multilingual": {
+    "file_name": "helpsteer3/final/bt_eval_multilingual.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_sfl_binary_eval_english": {
+    "file_name": "helpsteer3/final/sfl_binary_eval_english.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_sfl_binary_eval_multilingual": {
+    "file_name": "helpsteer3/final/sfl_binary_eval_multilingual.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_sfl_1_5_eval_multilingual": {
+    "file_name": "helpsteer3/final/sfl_1_5_eval_multilingual.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_english_sfl_binary_train": {
+    "file_name": "helpsteer3/assembled/English/sfl_binary_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_english_sfl_binary_val": {
+    "file_name": "helpsteer3/assembled/English/sfl_binary_val.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_bt_train": {
+    "file_name": "helpsteer3/assembled/MultiLingual/bt_train.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_bt_val": {
+    "file_name": "helpsteer3/assembled/MultiLingual/bt_val.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_sfl_1_5_train": {
+    "file_name": "helpsteer3/assembled/MultiLingual/sfl_1_5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_sfl_1_5_val": {
+    "file_name": "helpsteer3/assembled/MultiLingual/sfl_1_5_val.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_sfl_binary_train": {
+    "file_name": "helpsteer3/assembled/MultiLingual/sfl_binary_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer3_multilingual_sfl_binary_val": {
+    "file_name": "helpsteer3/assembled/MultiLingual/sfl_binary_val.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_bt_train_upsample_correctness": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/bt_train.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_bt_train_upsample_correctness_strict": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/bt_train.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_bt_train_upsample_correctness_anti": {
+    "file_name": "helpsteer2/correctness_upsampled_anti/bt_train.json",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_bt_train": {
+    "file_name": "helpsteer2/assembled/helpsteer2/bt_train.json",
     "ranking": true,
     "formatting": "sharegpt",
     "columns": {
@@ -62,8 +355,98 @@
       "assistant_tag": "gpt"
     }
   },
+  "helpsteer2_sfl_binary_train_upsample_correctness": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/sfl_binary_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_1_5_train_upsample_correctness": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/sfl_1_5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_1_5_train_upsample_correctness_strict": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/sfl_1_5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_1_5_train_upsample_correctness_anti": {
+    "file_name": "helpsteer2/correctness_upsampled_anti/sfl_1_5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
   "helpsteer2_sfl_binary_train": {
     "file_name": "helpsteer2/assembled/helpsteer2/sfl_binary_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_binary_train_upsample_correctness_strict": {
+    "file_name": "helpsteer2/correctness_upsampled_strict/sfl_binary_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {
+      "chosen": "chosen",
+      "rejected": "rejected"
+    },
+    "tags": {
+      "role_tag": "from",
+      "content_tag": "value",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "helpsteer2_sfl_binary_train_upsample_correctness_anti": {
+    "file_name": "helpsteer2/correctness_upsampled_anti/sfl_binary_train.json",
     "ranking": true,
     "formatting": "sfl",
     "columns": {
@@ -853,5 +1236,160 @@
       "prompt": "content"
     },
     "folder": "python"
+  },
+  "curriculum_qwen3_sfl_margin_eval": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/eval.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_full_original": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/Full-original_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_full_balanced": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/Full-balanced_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b1": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B1_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b2": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B2_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b3": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B3_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B4_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b5": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B5_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b3_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B3+B4_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_margin_b2_b3_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_margin_v1/B2+B3+B4_train.json",
+    "ranking": true,
+    "formatting": "sfl",
+    "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_full_original": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/Full-original_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_full_balanced": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/Full-balanced_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b1": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B1_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b2": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B2_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b3": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B3_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B4_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b5": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B5_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b3_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B3+B4_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_skywork_agree_margin_b2_b3_b4": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_skywork_agree_margin_v1/B2+B3+B4_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_eval": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round1_v1/eval.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g1_raw_random": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round1_v1/G1_raw_random_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g2_teacher_filtered_random": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round1_v1/G2_teacher_filtered_random_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g3_teacher_filtered_active": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round1_v1/G3_teacher_filtered_active_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g2_2": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round2_v2/G2_2_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g3_2": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round2_v2/G3_2_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g2_plus_g3_2_active_round3": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round3_v1/G2_plus_G3_2_active_round3_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
+  },
+  "curriculum_qwen3_sfl_plan_c_g3_plus_g3_2_active_round3": {
+    "file_name": "helpsteer3/curriculum/qwen3_8b_sfl_plan_c_round3_v1/G3_plus_G3_2_active_round3_train.json",
+    "ranking": true, "formatting": "sfl", "columns": {"chosen": "chosen", "rejected": "rejected"},
+    "tags": {"role_tag": "from", "content_tag": "value", "user_tag": "human", "assistant_tag": "gpt"}
   }
 }
