@@ -331,16 +331,16 @@ actor = PPOActor(base_model, sfl_shared_backbone=True)
 for iteration in range(ppo_iterations):
     # 采样
     responses = actor.generate(prompts, num_samples=N)
-    
+
     # SfL 打分 (no grad)
     rewards = sfl.score(prompts, responses).detach()
-    
+
     # 组内标准化 → advantage
     advantages = (rewards - rewards.mean()) / rewards.std()
-    
+
     # PPO 更新 Actor
     actor.backward(ppo_loss(responses, advantages))
-    
+
     # 可选：SfL RM 继续用新 pairwise 数据更新
     if has_new_pairwise_data:
         sfl.backward(sfl_loss(chosen, rejected))
