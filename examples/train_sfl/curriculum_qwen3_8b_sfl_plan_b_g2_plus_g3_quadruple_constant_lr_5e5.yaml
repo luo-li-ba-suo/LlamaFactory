@@ -1,0 +1,46 @@
+### Long mixed-data continuation: G2 plus four balanced G3_2 generations.
+model_name_or_path: ../../model/Qwen3-8B
+trust_remote_code: true
+
+stage: sfl
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_target: all
+
+sfl_score_tokens: "0,1"
+sfl_prefix_str: '{"score": '
+sfl_temperature: 5.0
+
+dataset: curriculum_qwen3_sfl_plan_b_g2_plus_g3_quadruple_balanced
+eval_dataset: curriculum_qwen3_sfl_plan_c_eval
+template: qwen3
+enable_thinking: false
+cutoff_len: 4096
+preprocessing_num_workers: 16
+
+output_dir: saves/curriculum/qwen3-8b-sfl-plan-b-g2-plus-g3-quadruple-constant-lr-5e5
+run_name: curriculum_qwen3_8b_sfl_plan_b_g2_plus_g3_quadruple_constant_lr_5e5
+logging_steps: 10
+save_steps: 200
+save_strategy: steps
+plot_loss: true
+overwrite_output_dir: true
+report_to: wandb
+
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 4
+learning_rate: 5.0e-5
+num_train_epochs: 2.0
+lr_scheduler_type: constant_with_warmup
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+resume_from_checkpoint: null
+seed: 42
+
+do_eval: true
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 64

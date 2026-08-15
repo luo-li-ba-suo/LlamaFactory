@@ -1,25 +1,32 @@
 ### model
-model_name_or_path: /workspace/model/chat_model/Qwen2.5-14B-Instruct
+model_name_or_path: ../../model/chat_model/Qwen3-14B
 trust_remote_code: true
 
 ### method
-stage: rm
+stage: sfl
 do_train: true
 finetuning_type: lora
+deepspeed: examples/deepspeed/ds_z3_config.json
 lora_rank: 16
 lora_alpha: 32
 lora_target: all
 
+### sfl
+sfl_score_tokens: "0,1"
+sfl_prefix_str: '{"score": '
+sfl_temperature: 5.0
+
 ### dataset
-dataset: helpsteer3_english_bt_train
-eval_dataset: helpsteer3_bt_eval_english
-template: qwen
+dataset: helpsteer3_english_sfl_binary_train
+eval_dataset: helpsteer3_sfl_binary_eval_english
+template: qwen3
+enable_thinking: false
 cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: /workspace/model/ckpt/reward_model/helpsteer3-bt-english-qwen2_5-14b
-run_name: helpsteer3_bt_english_lora_r16_14b
+output_dir: /workspace/model/ckpt/reward_model/helpsteer3-sfl-english-qwen3-14b-lora-z3
+run_name: helpsteer3_sfl_english_qwen3_14b_lora_z3
 logging_steps: 10
 save_steps: 200
 save_strategy: steps

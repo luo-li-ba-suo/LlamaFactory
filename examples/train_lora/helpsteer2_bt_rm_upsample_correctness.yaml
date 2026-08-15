@@ -1,5 +1,5 @@
 ### model
-model_name_or_path: /workspace/model/chat_model/Qwen2.5-14B-Instruct
+model_name_or_path: /workspace/model/chat_model/Qwen2.5-7B-Instruct
 trust_remote_code: true
 
 ### method
@@ -11,15 +11,15 @@ lora_alpha: 32
 lora_target: all
 
 ### dataset
-dataset: helpsteer3_english_bt_train
-eval_dataset: helpsteer3_bt_eval_english
+dataset: helpsteer2_bt_train_upsample_correctness
+eval_dataset: helpsteer2_bt_eval_tagged
 template: qwen
 cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: /workspace/model/ckpt/reward_model/helpsteer3-bt-english-qwen2_5-14b
-run_name: helpsteer3_bt_english_lora_r16_14b
+output_dir: /workspace/model/ckpt/reward_model/bt-lora_upsample_correctness
+run_name: helpsteer2_bt_rm_lora_r16_upsample_correctness
 logging_steps: 10
 save_steps: 200
 save_strategy: steps
@@ -31,7 +31,7 @@ report_to: wandb
 per_device_train_batch_size: 1
 gradient_accumulation_steps: 8
 learning_rate: 5.0e-5
-num_train_epochs: 2.0
+num_train_epochs: 3.0
 lr_scheduler_type: cosine
 warmup_ratio: 0.1
 bf16: true
@@ -40,6 +40,6 @@ resume_from_checkpoint: null
 
 ### eval
 do_eval: true
-per_device_eval_batch_size: 1
+per_device_eval_batch_size: 2
 eval_strategy: steps
 eval_steps: 16

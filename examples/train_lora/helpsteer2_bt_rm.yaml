@@ -42,4 +42,4 @@ resume_from_checkpoint: null
 do_eval: true
 per_device_eval_batch_size: 1
 eval_strategy: steps
-eval_steps: 10
+eval_steps: 16

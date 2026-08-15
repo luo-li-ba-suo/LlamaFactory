@@ -18,7 +18,7 @@ cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: /workspace/model/ckpt/reward_model/helpsteer3-bt-multilingual
+output_dir: /workspace/model/ckpt/reward_model/helpsteer3-bt-multilingual-qwen2_5-14b
 run_name: helpsteer3_bt_multilingual_lora_r16_14b
 logging_steps: 10
 save_steps: 200

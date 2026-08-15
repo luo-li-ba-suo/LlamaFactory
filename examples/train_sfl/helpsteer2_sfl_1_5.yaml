@@ -23,8 +23,8 @@ cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: saves/helpsteer2/sfl-lora
-run_name: helpsteer2_sfl_lora_r16
+output_dir: saves/helpsteer2/sfl-1-5-lora
+run_name: helpsteer2_sfl_1_5_lora_r16
 logging_steps: 10
 save_steps: 200
 plot_loss: true

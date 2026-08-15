@@ -1,0 +1,27 @@
+### model
+model_name_or_path: /workspace/model/ckpt/Qwen2.5-7B-SfL-binary-HelpSteer2
+trust_remote_code: true
+
+### method
+stage: sfl
+do_train: false
+finetuning_type: lora
+
+### sfl
+sfl_score_tokens: "0,1"
+sfl_prefix_str: '{"score": '
+
+### dataset
+eval_dataset: helpsteer2_sfl_binary_eval_tagged
+template: qwen
+cutoff_len: 4096
+preprocessing_num_workers: 16
+
+### output
+output_dir: saves/helpsteer2/sfl-lora/eval
+overwrite_output_dir: true
+
+### eval
+do_eval: true
+do_predict: true
+per_device_eval_batch_size: 2

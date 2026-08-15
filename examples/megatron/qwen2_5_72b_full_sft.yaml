@@ -1,0 +1,42 @@
+### model
+model_name_or_path: Qwen/Qwen2.5-72B-Instruct
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: full  # MCA 只支持 full
+
+### dataset
+dataset: identity,alpaca_en_demo
+template: qwen
+cutoff_len: 2048
+max_samples: 1000
+preprocessing_num_workers: 16
+
+### output
+output_dir: saves/mca/qwen2.5-72b-full
+logging_steps: 1
+save_steps: 100
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-5
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+
+### mca (Megatron-Core)
+# world_size = TP * PP * DP = 8 * 2 * 1 = 16 GPUs (2 nodes × 8 GPUs)
+tensor_model_parallel_size: 8
+pipeline_model_parallel_size: 2
+sequence_parallel: true
+use_distributed_optimizer: true
+overlap_param_gather: true
+overlap_grad_reduce: true
+recompute_granularity: full  # 激活重计算，省显存

@@ -1,0 +1,24 @@
+### model
+model_name_or_path: /workspace/model/ckpt/Qwen2.5-7B-BT-HelpSteer2
+trust_remote_code: true
+
+### method
+stage: rm
+do_train: false
+finetuning_type: lora
+
+### dataset
+# dataset: helpsteer2_bt_train
+eval_dataset: helpsteer2_bt_eval_tagged
+template: qwen
+cutoff_len: 4096
+preprocessing_num_workers: 16
+
+### output
+output_dir: saves/helpsteer2/bt-rm/eval
+overwrite_output_dir: true
+
+### eval
+do_eval: true
+do_predict: true
+per_device_eval_batch_size: 2

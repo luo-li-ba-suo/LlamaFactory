@@ -1,0 +1,11 @@
+### Plan B G2 half + G3_2 SfL LoRA merge (CPU only)
+model_name_or_path: ../../model/Qwen3-8B
+adapter_name_or_path: saves/curriculum/qwen3-8b-sfl-plan-b-g2-half-plus-g3-2
+template: qwen3
+trust_remote_code: true
+
+### export
+export_dir: ../../model/ckpt/reward_model/qwen3-8b-sfl-plan-b-g2-half-plus-g3-2
+export_size: 5
+export_device: cpu
+export_legacy_format: false

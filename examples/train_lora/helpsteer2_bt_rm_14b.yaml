@@ -11,15 +11,15 @@ lora_alpha: 32
 lora_target: all
 
 ### dataset
-dataset: helpsteer3_english_bt_train
-eval_dataset: helpsteer3_bt_eval_english
+dataset: helpsteer2_bt_train
+eval_dataset: helpsteer2_bt_eval_tagged
 template: qwen
 cutoff_len: 4096
 preprocessing_num_workers: 16
 
 ### output
-output_dir: /workspace/model/ckpt/reward_model/helpsteer3-bt-english-qwen2_5-14b
-run_name: helpsteer3_bt_english_lora_r16_14b
+output_dir: /workspace/model/ckpt/reward_model/bt-lora-14b
+run_name: helpsteer2_bt_rm_14b_lora_r16
 logging_steps: 10
 save_steps: 200
 save_strategy: steps
